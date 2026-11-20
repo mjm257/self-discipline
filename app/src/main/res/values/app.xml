@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">每日自律 TODO</string>
+    <string name="guard_name">自律应用守护</string>
+    <string name="guard_description">识别当前应用包名，以便在你选定的应用上显示自定义问题。不会读取窗口内容、记录按键或上传数据。</string>
+    <string name="answered_count">已输入 %1$d/%2$d</string>
+    <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar"><item name="android:fontFamily">sans</item><item name="android:windowLightStatusBar">true</item></style>
+</resources>
