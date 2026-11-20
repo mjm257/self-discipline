@@ -153,7 +153,6 @@ fun SettingsPage(m: DailyModel, a: MainActivity, s: AppSettings) {
     var pin by rememberSaveable { mutableStateOf(false) }
     if (pin) { PinSetup(m, true) { pin = false }; return }
     var question by rememberSaveable(s.dailyQuestion) { mutableStateOf(s.dailyQuestion) }
-    var min by rememberSaveable(s.minChars) { mutableStateOf(s.minChars.toString()) }
     var policy by rememberSaveable(s.entryPolicy) { mutableStateOf(s.entryPolicy) }
     var dialog by rememberSaveable { mutableStateOf("") }
     val revision = a.revision
@@ -165,16 +164,16 @@ fun SettingsPage(m: DailyModel, a: MainActivity, s: AppSettings) {
         Heading("设置")
         Text("进入今日页", style = MaterialTheme.typography.titleLarge)
         OutlinedTextField(question, { question = it }, Modifier.fillMaxWidth(), label = { Text("每日问题") })
-        OutlinedTextField(min, { min = it }, Modifier.fillMaxWidth(), singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), label = { Text("最少字数（至少 15）") })
+
+        Text("回答满 15 个非空白字符即可提交，字数不限。")
         EntryPolicy.entries.forEach { entry ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(policy == entry, onClick = { policy = entry })
                 TextButton(onClick = { policy = entry }) { Text(if (entry == EntryPolicy.FIRST_DAILY) "每日首次进入" else "每次进入") }
             }
         }
-        Button(enabled = question.isNotBlank() && (min.toIntOrNull() ?: 0) >= 15, onClick = {
-            m.action { m.store.updateSettings(question.trim(), min.toInt(), policy); m.error = "提问设置已保存。" }
+        Button(enabled = question.isNotBlank(), onClick = {
+            m.action { m.store.updateSettings(question.trim(), policy); m.error = "提问设置已保存。" }
         }) { Text("保存提问设置") }
         OutlinedButton(onClick = { pin = true }) { Text("更改紧急 PIN") }
         HorizontalDivider()

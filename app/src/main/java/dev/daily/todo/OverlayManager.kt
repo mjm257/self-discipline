@@ -69,7 +69,7 @@ internal class OverlayManager(service: Context) {
 
     fun error(message: String) { onError?.invoke(message) }
 
-    fun show(label: String, draft: GuardSessions.Draft, minChars: Int,
+    fun show(label: String, draft: GuardSessions.Draft,
              onSubmit: (String) -> Unit, onPin: (String) -> Unit) {
         hide()
         val scroll = PromptWindow(themed).apply {
@@ -126,8 +126,8 @@ internal class OverlayManager(service: Context) {
         var busy = false
         fun update() {
             val length = answerLength(editor.text.toString())
-            count.text = context.getString(R.string.answered_count, length, minChars)
-            submit.isEnabled = !busy && if (emergency) pin.length() > 0 else length >= minChars
+            count.text = context.getString(R.string.answered_count, length, MIN_ANSWER_CHARS)
+            submit.isEnabled = !busy && if (emergency) pin.length() > 0 else canSubmitAnswer(editor.text.toString())
             cancel.isEnabled = !busy
             editor.isEnabled = !busy
             pin.isEnabled = !busy

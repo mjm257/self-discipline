@@ -67,7 +67,7 @@ private fun DailyContent(m: DailyModel, a: MainActivity, s: AppSettings) {
                 }
             }
             if (m.checking) LinearProgressIndicator(Modifier.fillMaxWidth())
-            m.prompt?.let { q -> key(q.session) { QuestionDialog(m, a, s, q) } }
+            m.prompt?.let { q -> key(q.session) { QuestionDialog(m, a, q) } }
         }
     }
     m.error?.let { message ->
@@ -149,7 +149,7 @@ fun PinSetup(m: DailyModel, editing: Boolean, finished: () -> Unit) {
 }
 
 @Composable
-private fun QuestionDialog(m: DailyModel, a: MainActivity, s: AppSettings, q: EntryQuestion) {
+private fun QuestionDialog(m: DailyModel, a: MainActivity, q: EntryQuestion) {
     var unlocking by rememberSaveable { mutableStateOf(false) }
     var pin by remember { mutableStateOf("") }
     var invalid by remember { mutableStateOf(false) }
@@ -175,8 +175,8 @@ private fun QuestionDialog(m: DailyModel, a: MainActivity, s: AppSettings, q: En
                     OutlinedTextField(m.answer, { m.answer = it }, Modifier.fillMaxWidth(),
                         label = { Text("我的回答") }, minLines = 3, maxLines = 7)
                     val count = answerLength(m.answer)
-                    Text(androidx.compose.ui.res.stringResource(R.string.answered_count, count, s.minChars))
-                    Button(enabled = count >= s.minChars && !m.busy, onClick = { m.submit(a::open) }) {
+                    Text(androidx.compose.ui.res.stringResource(R.string.answered_count, count, MIN_ANSWER_CHARS))
+                    Button(enabled = canSubmitAnswer(m.answer) && !m.busy, onClick = { m.submit(a::open) }) {
                         Text(if (q.app == null) "保存并进入今日" else "保存并打开应用")
                     }
                     Text("紧急退出：长按问题标题 5 秒，再输入 PIN。", style = MaterialTheme.typography.bodySmall)

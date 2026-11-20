@@ -11,6 +11,10 @@ fun answerLength(text: String): Int = text.codePoints().filter { cp ->
         Character.getType(cp) != Character.FORMAT.toInt()
 }.count().toInt()
 
+internal const val MIN_ANSWER_CHARS = 15
+
+internal fun canSubmitAnswer(text: String): Boolean = answerLength(text) >= MIN_ANSWER_CHARS
+
 internal fun isRuleReady(enabled: Boolean, cooldownSeconds: Int, lastSubmittedAt: Long?, now: Long): Boolean =
     enabled && (lastSubmittedAt == null || cooldownSeconds == 0 || now >= lastSubmittedAt + cooldownSeconds * 1000L)
 
@@ -18,7 +22,7 @@ enum class EntryPolicy { EVERY_ENTRY, FIRST_DAILY }
 
 data class AppSettings(
     val dailyQuestion: String = "今天你准备完成什么？为什么这件事值得做？",
-    val minChars: Int = 15, val entryPolicy: EntryPolicy = EntryPolicy.EVERY_ENTRY,
+    val entryPolicy: EntryPolicy = EntryPolicy.EVERY_ENTRY,
     val hasPin: Boolean = false, val guardPausedUntil: Long = 0, val allPausedUntil: Long = 0
 ) {
     fun askingAt(now: Long) = hasPin && now >= allPausedUntil

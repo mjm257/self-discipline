@@ -19,7 +19,6 @@ import java.time.ZoneId
 private val Context.dailyPrefs by preferencesDataStore("daily_settings")
 private object Keys {
     val question = stringPreferencesKey("daily_question")
-    val min = intPreferencesKey("min_chars")
     val policy = stringPreferencesKey("entry_policy")
     val salt = stringPreferencesKey("pin_salt")
     val hash = stringPreferencesKey("pin_hash")
@@ -67,7 +66,6 @@ class Store private constructor(context: Context) {
         val defaults = AppSettings()
         return AppSettings(
             dailyQuestion = this[Keys.question] ?: defaults.dailyQuestion,
-            minChars = (this[Keys.min] ?: defaults.minChars).coerceAtLeast(15),
             entryPolicy = EntryPolicy.values().find { it.name == this[Keys.policy] } ?: defaults.entryPolicy,
             hasPin = this[Keys.hash] != null && this[Keys.salt] != null && this[Keys.rounds] != null,
             guardPausedUntil = this[Keys.guardUntil] ?: 0,
@@ -109,11 +107,10 @@ class Store private constructor(context: Context) {
             dao.revokePass(packageName, Long.MAX_VALUE)
         }
     }
-    suspend fun updateSettings(dailyQuestion: String, minChars: Int, entryPolicy: EntryPolicy) = access {
-        require(dailyQuestion.isNotBlank() && minChars >= 15) { "问题不能为空，字数下限为 15" }
+    suspend fun updateSettings(dailyQuestion: String, entryPolicy: EntryPolicy) = access {
+        require(dailyQuestion.isNotBlank()) { "问题不能为空" }
         prefs.edit {
             it[Keys.question] = dailyQuestion.trim()
-            it[Keys.min] = minChars
             it[Keys.policy] = entryPolicy.name
         }
         Unit
@@ -164,7 +161,7 @@ class Store private constructor(context: Context) {
         val s = prefs.data.first().view()
         db.withTransaction {
             if (dao.submitted(sessionId)) return@withTransaction
-            require(answerLength(answer) >= s.minChars) { "有效字数不足" }
+            require(canSubmitAnswer(answer)) { "有效字数不足" }
             val now = System.currentTimeMillis()
             require(s.askingAt(now)) { "当前已暂停提问" }
             if (targetPackage != null) {

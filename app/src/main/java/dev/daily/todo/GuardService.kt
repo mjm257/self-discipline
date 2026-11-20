@@ -38,7 +38,6 @@ class GuardService : AccessibilityService() {
     private var overlay: OverlayManager? = null
     private var evaluation: Job? = null
     private var activeDraft: GuardSessions.Draft? = null
-    private var minShown = 0
     private var watchingScreen = false
     private var watchingOps = false
     private val main = Handler(Looper.getMainLooper())
@@ -82,7 +81,7 @@ class GuardService : AccessibilityService() {
                     when {
                         !prefs.guardingAt(System.currentTimeMillis()) -> leave("应用守护已暂停或尚未设置 PIN")
                         rule?.enabled != true -> leave("等待目标应用进入前台")
-                        activeDraft != null && (rule.question != activeDraft?.question || minShown != prefs.minChars) ->
+                        activeDraft != null && rule.question != activeDraft?.question ->
                             leave("守护规则已更新，等待下一次前台事件")
                     }
                 }
@@ -163,8 +162,7 @@ class GuardService : AccessibilityService() {
                 val draft = sessions.draft(pkg, eligible.question)
                 val manager = overlay ?: OverlayManager(this@GuardService).also { overlay = it }
                 activeDraft = draft
-                minShown = prefs.minChars
-                manager.show(eligible.label, draft, minShown,
+                manager.show(eligible.label, draft,
                     onSubmit = { answer ->
                         action(visit, draft) {
                             store.submit(draft.id, draft.question, answer, "OVERLAY", pkg)

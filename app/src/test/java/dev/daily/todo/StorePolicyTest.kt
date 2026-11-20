@@ -4,6 +4,11 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class StorePolicyTest {
+    @Test fun acceptsAnswersFromFifteenCharactersWithoutACap() {
+        assertFalse(canSubmitAnswer("字".repeat(14) + "　"))
+        assertTrue(canSubmitAnswer("字".repeat(15)))
+        assertTrue(canSubmitAnswer("字".repeat(100_000)))
+    }
     @Test fun countsCodePointsWithoutFormattingOrSpaces() {
         assertEquals(0, answerLength("\u0000\t\n\u00a0\u0085\u3000\u200d"))
         assertEquals(14, answerLength("一".repeat(13) + "😀"))
