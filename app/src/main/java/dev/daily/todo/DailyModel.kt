@@ -11,6 +11,8 @@ import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.retryWhen
+import kotlinx.coroutines.delay
 
 enum class Page(val title: String) {
     TODAY("今日"), HISTORY("历史"), APPS("应用"), GUARD("守护"), SETTINGS("设置")
@@ -23,6 +25,16 @@ data class EntryQuestion(
 
 class DailyModel(application: Application) : AndroidViewModel(application) {
     val store = Store.get(application)
+    internal val obsidian = ObsidianSync(application, store)
+
+    init {
+        viewModelScope.launch {
+            store.allPlans.retryWhen { _, _ ->
+                delay(5_000)
+                true
+            }.collect { obsidian.sync() }
+        }
+    }
     var page by mutableStateOf(Page.TODAY)
         private set
     var date by mutableStateOf(LocalDate.now().toString())

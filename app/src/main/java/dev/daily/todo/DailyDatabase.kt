@@ -61,6 +61,7 @@ internal interface DailyDao {
     @Query("DELETE FROM LaunchPass WHERE packageName=:pkg AND issuedAt <= :observedAt")
     suspend fun revokePass(pkg: String, observedAt: Long)
     @Query("SELECT * FROM TodoItem ORDER BY date,id") suspend fun allTodos(): List<TodoItem>
+    @Query("SELECT * FROM TodoItem ORDER BY date,id") fun observeAllTodos(): kotlinx.coroutines.flow.Flow<List<TodoItem>>
     @Query("SELECT * FROM ReflectionRecord ORDER BY id") suspend fun allAnswers(): List<ReflectionRecord>
     @Query("SELECT * FROM GuardRule ORDER BY packageName") suspend fun allRules(): List<GuardRule>
     @Query("DELETE FROM TodoItem") suspend fun clearTodos()

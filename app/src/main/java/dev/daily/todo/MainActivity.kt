@@ -30,6 +30,11 @@ class MainActivity : ComponentActivity() {
         model.systemTrip = false
         revision++
     }
+    private val obsidianResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        model.systemTrip = false
+        val tree = result.data?.data
+        if (result.resultCode == RESULT_OK && tree != null) model.action { model.obsidian.connect(tree) }
+    }
     private val exportResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         model.systemTrip = false
         val destination = result.data?.data
@@ -136,6 +141,18 @@ class MainActivity : ComponentActivity() {
         } catch (_: Exception) {
             model.systemTrip = false
             model.error = "无法打开系统文件选择器。"
+        }
+    }
+
+    fun chooseObsidianFolder() {
+        try {
+            model.systemTrip = true
+            obsidianResult.launch(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+                putExtra(Intent.EXTRA_LOCAL_ONLY, true)
+            })
+        } catch (_: Exception) {
+            model.systemTrip = false
+            model.error = "无法打开系统文件夹选择器。"
         }
     }
 

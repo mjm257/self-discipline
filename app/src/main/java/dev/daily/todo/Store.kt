@@ -76,6 +76,7 @@ class Store private constructor(context: Context) {
         .map { it.view() }.distinctUntilChanged().afterRecovery()
     val rules = dao.rules().afterRecovery()
     val dates = dao.dates().afterRecovery()
+    internal val allPlans = dao.observeAllTodos().afterRecovery()
     fun todos(date: String) = dao.todos(date).afterRecovery()
     fun reflections(date: String) = dao.reflections(date).afterRecovery()
 

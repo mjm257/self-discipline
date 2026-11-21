@@ -156,6 +156,7 @@ fun SettingsPage(m: DailyModel, a: MainActivity, s: AppSettings) {
     var policy by rememberSaveable(s.entryPolicy) { mutableStateOf(s.entryPolicy) }
     var dialog by rememberSaveable { mutableStateOf("") }
     val revision = a.revision
+    val obsidian by m.obsidian.status.collectAsStateWithLifecycle()
     val home = remember(revision) {
         a.packageManager.resolveActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME),
             PackageManager.MATCH_DEFAULT_ONLY)?.activityInfo?.packageName == a.packageName
@@ -187,19 +188,38 @@ fun SettingsPage(m: DailyModel, a: MainActivity, s: AppSettings) {
         TextButton(onClick = { dialog = "access" }) { Text("管理无障碍服务") }
         TextButton(onClick = { dialog = "overlay" }) { Text("管理悬浮窗权限") }
         HorizontalDivider()
+        Text("Obsidian 每日待办", style = MaterialTheme.typography.titleLarge)
+        if (obsidian.folder == null) {
+            Text("将每日计划写入手机 Obsidian 的每日笔记。")
+            OutlinedButton(onClick = { dialog = "obsidian" }) { Text("连接 Obsidian") }
+        } else {
+            Text("已连接 · ${obsidian.folder}")
+            Text(obsidian.message)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = { m.action { m.obsidian.sync(force = true) } }) { Text("立即同步") }
+                TextButton(onClick = { dialog = "obsidian" }) { Text("换文件夹") }
+                TextButton(onClick = { m.action { m.obsidian.disconnect() } }) { Text("断开") }
+            }
+        }
+        HorizontalDivider()
         Text("本地数据与隐私", style = MaterialTheme.typography.titleLarge)
         Text("计划、回答和守护规则保存在本机。守护服务只使用窗口变化的应用标识，不读取屏幕文本。关闭授权仍可使用今日计划。")
         TextButton(onClick = { dialog = "export" }) { Text("导出 JSON") }
         TextButton(onClick = { dialog = "clear" }) { Text("清空全部本地数据") }
     }
     when (dialog) {
+        "obsidian" -> Confirm(
+            "连接 Obsidian 每日待办",
+            "请选择手机 Obsidian 库内的「日程记录」文件夹。App 会把已有和新增的计划标题与完成状态写进对应日期的 Markdown 笔记，保留手写待办和其他段落。连接为单向同步，请在 App 中编辑同步的任务。",
+            "选择文件夹", { dialog = "" }
+        ) { dialog = ""; a.chooseObsidianFolder() }
         "access" -> Confirm("前台应用识别", "开启无障碍服务后，可识别进入自选应用的窗口变化。服务不读取节点、按键或窗口内容。随时可在系统设置关闭。", "去系统设置", { dialog = "" }) { dialog = ""; a.accessibility() }
         "overlay" -> Confirm("在应用上方显示提问", "授权后，进入已启用的目标时可显示可输入的目的提问。系统导航、锁屏和敏感系统窗口优先放行。", "去系统设置", { dialog = "" }) { dialog = ""; a.overlay() }
         "export" -> Confirm("导出敏感数据？", "文件包含计划、回答原文及应用规则。请选择你信任的本地保存位置。", "选择位置", { dialog = "" }) { dialog = ""; a.export() }
         "clear" -> Confirm("清空本地数据？", "将删除所有日期的计划、回答、应用规则和 PIN。", "继续", { dialog = "" }) { dialog = "clearFinal" }
         "clearFinal" -> Confirm("确认永久删除？", "删除后无法恢复，应用将返回首次引导。", "永久删除", { dialog = "" }) {
             dialog = ""
-            m.action { m.store.clearAll(); m.reset() }
+            m.action { m.obsidian.disconnect(clearLocalState = true); m.store.clearAll(); m.reset() }
         }
     }
 }
